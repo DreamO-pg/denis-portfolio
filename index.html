@@ -377,6 +377,7 @@ html.lock,html.lock body{overflow:hidden}
 .bk-foot{display:flex;justify-content:space-between;gap:10px;max-width:760px;width:100%;margin:12px auto 0}
 .bk-foot .btn{height:44px;cursor:pointer}
 .bk-foot .btn[disabled]{opacity:.35;pointer-events:none}
+@media (max-width:380px){.bk-foot .nx-l{display:none}}
 .bpage .mgrid5,.bpage .mgrid{gap:30px 14px}
 @media (prefers-reduced-motion:reduce){.book.opened .bk-cover{animation:none;display:none}}
 
@@ -996,7 +997,7 @@ let ci=0,pg=0,busy=false,lastFocus=null;const seen=new Set();
 function evHTML(e){return `<div class="note"><span class="tag">${esc(e.tag)}</span>${e.big?`<div class="big"><span class="circled">${esc(e.big)}</span>${e.unit?`<small>${esc(e.unit)}</small>`:""}</div>`:`<div class="mid">${esc(e.mid)}</div>`}<p>${esc(e.p)}</p></div>`;}
 function pageHTML(c,ci,p){
   const run=`<div class="pg-run label"><span>Дело №${c.no} · ${PAGES[p]}</span><span>стр. ${p+1} / 4</span></div>`;
-  const nextHint=p<3?`<button class="pg-next label" data-go="${p+1}">Дальше: ${PAGES[p+1]} →</button>`:"";
+  const nextHint="";
   if(p===0)return run+`<div class="pg-body">
     <div class="cf-top"><span class="kind">${esc(c.kind)}</span><span class="stamp ${c.open?"":"closed"}">${c.stamp}</span></div>
     <h2>${esc(c.title)}</h2><div class="where">${esc(c.where)}</div>
@@ -1015,8 +1016,7 @@ function pageHTML(c,ci,p){
     <p class="vd-line">${esc(v.line)}</p>
     ${v.money?`<div class="vd-money"><span class="tag">${esc(v.money.tag||"Экономия")}</span><div class="vd-mbig">${esc(v.money.big)} <small>${esc(v.money.unit)}</small></div><p class="vd-calc">${esc(v.money.calc)}</p></div>`:""}
     ${v.key?`<div class="vd-key"><span class="tag">Главная улика</span><p>${esc(v.key)}</p>${v.viz&&VIZ[v.viz]?`<figure class="ss-viz">${VIZ[v.viz]()}<figcaption>${esc(v.vizCap||"Схема для наглядности, не реальные данные")}</figcaption></figure>`:""}</div>`:""}
-    <div class="typed"><p>${esc(v.text)}</p></div>
-    <div class="pg-end">${ci===CASES.length-1?`<button class="btn" data-home>← На главную</button><button class="btn y" data-arch>Архив дел →</button>`:`<button class="btn" data-close>← К делам</button><button class="btn y" data-open="${(ci+1)%CASES.length}">Дело №${nx.no} →</button>`}</div></div>`;
+    <div class="typed"><p>${esc(v.text)}</p></div></div>`;
 }
 function renderBook(){
   const c=CASES[ci];
@@ -1028,7 +1028,10 @@ function renderBook(){
 }
 function syncNav(){
   document.querySelectorAll("#bk-tabs button").forEach(b=>b.setAttribute("aria-current",+b.dataset.go===pg));
-  document.getElementById("bk-prev").disabled=pg===0;document.getElementById("bk-next").disabled=pg===3;
+  const bp=document.getElementById("bk-prev"),bn=document.getElementById("bk-next"),last=ci===CASES.length-1;
+  bp.disabled=false;bn.disabled=false;
+  bp.textContent=pg===0?"← К делам":"← Назад";
+  bn.innerHTML=pg<3?`<span class="nx-l">Дальше:</span> ${PAGES[pg+1]} →`:last?"Архив дел →":`Дело №${CASES[ci+1].no} →`;
   const cur=bk.querySelector(`.bpage[data-p="${pg}"]`);if(cur){cur.scrollTop=0;requestAnimationFrame(()=>drawBoards(cur));}
 }
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1070,8 +1073,10 @@ book.addEventListener("click",e=>{
   if(e.target.closest("[data-close]"))closeBook();
 });
 document.getElementById("bk-close").onclick=()=>closeBook();
-document.getElementById("bk-prev").onclick=()=>go(pg-1);
-document.getElementById("bk-next").onclick=()=>go(pg+1);
+function nextCase(){const n=ci+1;history.replaceState({book:n},"","#case"+(n+1));ci=n;pg=0;seen.add(ci);markSeen();book.classList.remove("opened");void book.offsetWidth;renderBook();book.classList.add("opened");}
+function goArchive(){if(history.state&&history.state.book!==undefined){addEventListener("popstate",()=>setTimeout(()=>window.openArchive(),0),{once:true});closeBook();}else{closeBook();window.openArchive();}}
+document.getElementById("bk-prev").onclick=()=>{if(pg===0)closeBook();else go(pg-1);};
+document.getElementById("bk-next").onclick=()=>{if(pg<3)go(pg+1);else if(ci===CASES.length-1)goArchive();else nextCase();};
 addEventListener("keydown",e=>{if(book.hidden||document.getElementById("stepSheet").open)return;
   if(e.key==="Escape")closeBook();if(e.key==="ArrowRight")go(pg+1);if(e.key==="ArrowLeft")go(pg-1);});
 addEventListener("popstate",()=>{if(!book.hidden)closeBook(true);});
