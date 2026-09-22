@@ -426,6 +426,8 @@ html.lock,html.lock body{overflow:hidden}
 .arc-subs li{background:#fff;border:1px solid var(--rule);padding:10px}
 .arc-subs b{display:block;font:900 15px/1.25 var(--serif);margin-bottom:4px}
 .arc-subs span{font-size:12.5px;line-height:1.5;display:block}
+.arc-subs .sub-co{font:700 9.5px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+@media (min-width:620px){.arc-subs:has(> li:nth-child(4):last-child){grid-template-columns:1fr 1fr}}
 /* archive: box on the board + separate page */
 .arch-box{cursor:pointer}
 .arch-stack{position:relative;height:170px;margin:14px 0 18px}
@@ -688,20 +690,22 @@ const ARCHIVE=[
  ]},
  {where:"LIFE PAY · 2025–2026",t:"Воронка продлений",big:"2,4 млн ₽/год",p:"Находил проблемы, считал бизнес-велью и ставил задачи в разработку. Например, система создавала лиды на ликвидированные компании — менеджеры тратили на них дни."},
  {where:"LIFE PAY · 2025–2026",t:"Загрузка лидов в amoCRM",p:"Инициировал приложение вместо ручного Excel: шаблон, сделки через API, выбор ответственного менеджера."},
- {where:"LIFE PAY · 2025–2026",t:"Дашборды для отдела",wide:1,p:"Два дашборда, которые помогают управлять работой отдела.",subs:[
-   {t:"Overview отдела",p:"Вся ключевая картина в одном месте: лиды, звонки, счета, качество, проникновение, прогноз пролонгаций."},
-   {t:"Оценка знаний сотрудников",p:"Регулярная оценка знаний сотрудников: результаты, качество, NPS, курсы."}
+ {where:"Т-Банк + LIFE PAY · 2022–2026",t:"Дашборды",wide:1,p:"Аналитические инструменты, на которых команды принимали решения и видели эффект изменений.",subs:[
+   {co:"Т-Банк",t:"Эффективность команды",p:"SLA и TTM по типам задач, TTM — в разбивке на время реакции, работы и ожидания. На нём подтвердили гипотезу и отслеживали эффект изменений."},
+   {co:"LIFE PAY",t:"Churn-метрики",p:"Аналитика оттока: отток в динамике, выживаемость по когортам, разрезы по тарифам и сегментам."},
+   {co:"LIFE PAY",t:"Overview отдела",p:"Вся ключевая картина в одном месте: лиды, звонки, счета, качество, проникновение, прогноз пролонгаций."},
+   {co:"LIFE PAY",t:"Оценка знаний сотрудников",p:"Регулярная оценка знаний сотрудников: результаты, качество, NPS, курсы."}
  ]}
 ];
 
 // ---------- method visuals (schematic) ----------
 function archiveHTML(){
-  const cos=[...new Set(ARCHIVE.map(a=>a.where.split(" · ")[0]))];
-  return `<div class="arc-filter" role="group" aria-label="Фильтр по компании"><button data-arcf="" aria-pressed="true">Все<span class="n">${ARCHIVE.length}</span></button>${cos.map(c=>`<button data-arcf="${esc(c)}" aria-pressed="false">${esc(c)}<span class="n">${ARCHIVE.filter(a=>a.where.startsWith(c)).length}</span></button>`).join("")}</div>
-  <div class="arc-grid">${ARCHIVE.map(a=>{const [co,...yr]=a.where.split(" · ");return `<article class="arc${a.wide?" wide":""}" data-co="${esc(co)}"><span class="co">${esc(co)}</span><span class="label">${esc(yr.join(" · "))}</span><h4>${esc(a.t)}</h4>${a.big?`<b class="arc-big">${esc(a.big)}</b>`:""}<p>${esc(a.p)}</p>${a.subs?`<ol class="arc-subs">${a.subs.map((x,i)=>`<li><b>${String.fromCharCode(1072+i)}. ${esc(x.t)}</b><span>${esc(x.p)}</span></li>`).join("")}</ol>`:""}</article>`;}).join("")}</div>`;}
+  const coOf=a=>a.where.split(" · ")[0].split(" + "),cos=[...new Set(ARCHIVE.flatMap(coOf))];
+  return `<div class="arc-filter" role="group" aria-label="Фильтр по компании"><button data-arcf="" aria-pressed="true">Все<span class="n">${ARCHIVE.length}</span></button>${cos.map(c=>`<button data-arcf="${esc(c)}" aria-pressed="false">${esc(c)}<span class="n">${ARCHIVE.filter(a=>coOf(a).includes(c)).length}</span></button>`).join("")}</div>
+  <div class="arc-grid">${ARCHIVE.map(a=>{const [co,...yr]=a.where.split(" · ");return `<article class="arc${a.wide?" wide":""}" data-co="${esc(co)}"><span class="co">${esc(co)}</span><span class="label">${esc(yr.join(" · "))}</span><h4>${esc(a.t)}</h4>${a.big?`<b class="arc-big">${esc(a.big)}</b>`:""}<p>${esc(a.p)}</p>${a.subs?`<ol class="arc-subs">${a.subs.map((x,i)=>`<li>${x.co?`<span class="sub-co">${esc(x.co)}</span>`:""}<b>${String.fromCharCode(1072+i)}. ${esc(x.t)}</b><span>${esc(x.p)}</span></li>`).join("")}</ol>`:""}</article>`;}).join("")}</div>`;}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-arcf]");if(!b)return;const f=b.dataset.arcf,root=b.closest(".archive");
   root.querySelectorAll("[data-arcf]").forEach(x=>x.setAttribute("aria-pressed",x===b));
-  root.querySelectorAll(".arc").forEach(a=>a.hidden=!!f&&a.dataset.co!==f);});
+  root.querySelectorAll(".arc").forEach(a=>a.hidden=!!f&&!a.dataset.co.split(" + ").includes(f));});
 document.addEventListener("DOMContentLoaded",()=>{const al=document.getElementById("archiveList");if(al)al.innerHTML=archiveHTML();});
 const VZ_INK="#1B1A17",VZ_RED="#C4122F",VZ_Y="#F2C12E",VZ_P="#FBF8F1",VZ_M="#DCE8D5",VZ_MU="#6B6558";
 const VIZ={
