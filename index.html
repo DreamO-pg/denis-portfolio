@@ -8,6 +8,17 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<!-- Yandex.Metrika counter -->
+<script>
+(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+m[i].l=1*new Date();
+for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+(window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+ym(112922420, "init", {clickmap:true, trackLinks:true, accurateTrackBounce:true, webvisor:true});
+window.goal=function(n,p){try{ym(112922420,"reachGoal",n,p);}catch(e){}};
+</script>
+<!-- /Yandex.Metrika counter -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800;900&family=PT+Mono&family=Cousine:wght@700&family=Caveat:wght@600;700&display=swap">
@@ -436,6 +447,7 @@ html.lock,html.lock body{overflow:hidden}
 </style>
 </head>
 <body>
+<noscript><div><img src="https://mc.yandex.ru/watch/112922420" style="position:absolute;left:-9999px" alt=""></div></noscript>
 
 
 <header class="topbar">
@@ -1022,6 +1034,7 @@ function syncNav(){
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 function go(n){
   if(busy||n===pg||n<0||n>3)return;
+  if(n===3)goal("verdict_view",{case:ci+1});
   const from=bk.querySelector(`.bpage[data-p="${pg}"]`),to=bk.querySelector(`.bpage[data-p="${n}"]`);
   const fwd=n>pg;pg=n;
   if(reduce){from.hidden=true;to.hidden=false;syncNav();return;}
@@ -1032,6 +1045,7 @@ function go(n){
   syncNav();
 }
 function openCase(i,push=true){
+  goal("case_open",{case:i+1});
   ci=i;pg=0;seen.add(i);renderBook();markSeen();
   lastFocus=document.activeElement;
   book.hidden=false;document.documentElement.classList.add("lock");
@@ -1078,7 +1092,7 @@ function show(c,i){cc=c;cs=i;const m=CASES[c].method[i];
   const f=document.getElementById("ss-f");f.hidden=!m.find;document.getElementById("ss-ft").textContent=m.find||"";
   const last=i===CASES[c].method.length-1,nb=document.getElementById("ss-next");
   document.getElementById("ss-prev").disabled=i===0;nb.disabled=false;nb.textContent=last?"К вердикту →":"Дальше →";}
-document.addEventListener("click",e=>{const b=e.target.closest(".stk");if(!b)return;b.classList.add("seen");b.querySelector(".more").textContent="Прочитано ✓";b.closest(".mboard").classList.add("used");show(+b.dataset.case,+b.dataset.step);dlg.showModal();});
+document.addEventListener("click",e=>{const b=e.target.closest(".stk");if(!b)return;b.classList.add("seen");b.querySelector(".more").textContent="Прочитано ✓";b.closest(".mboard").classList.add("used");goal("step_open",{case:+b.dataset.case+1,step:+b.dataset.step+1});show(+b.dataset.case,+b.dataset.step);dlg.showModal();});
 document.getElementById("ss-x").onclick=()=>dlg.close();
 document.getElementById("ss-prev").onclick=()=>show(cc,cs-1);
 document.getElementById("ss-next").onclick=()=>{if(cs<CASES[cc].method.length-1){show(cc,cs+1);return;}dlg.close();if(!book.hidden&&ci===cc)go(3);};
@@ -1089,7 +1103,7 @@ dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close();});
   const pick=[...ARCHIVE].reverse().slice(0,3).reverse(),pos=[["-44px","26px","-7deg"],["38px","14px","5deg"],["0px","0px","-1deg"]];
   st.innerHTML=pick.map((a,i)=>`<div class="mini${a.where.startsWith("LIFE PAY")?" lp":""}" style="--dx:${pos[i][0]};--dy:${pos[i][1]};--r:${pos[i][2]}"><span class="label">${esc(a.where)}</span><b>${esc(a.t)}</b></div>`).join("")+`<span class="arch-more">+${ARCHIVE.length-3} дел</span>`;
   let back=null;
-  function open(){back=document.activeElement;page.hidden=false;page.scrollTop=0;document.documentElement.classList.add("lock");history.pushState({arch:1},"","#archive");setTimeout(()=>document.getElementById("archClose").focus(),50);}
+  function open(){goal("archive_open");back=document.activeElement;page.hidden=false;page.scrollTop=0;document.documentElement.classList.add("lock");history.pushState({arch:1},"","#archive");setTimeout(()=>document.getElementById("archClose").focus(),50);}
   function close(fromPop){if(page.hidden)return;page.hidden=true;document.documentElement.classList.remove("lock");if(!fromPop&&history.state&&history.state.arch)history.back();if(back)back.focus();}
   document.getElementById("archOpenBox").addEventListener("click",open);
   window.openArchive=open;
@@ -1100,5 +1114,9 @@ dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close();});
 })();
 </script>
 
+<script>
+document.addEventListener("click",e=>{const a=e.target.closest("a[href]");if(!a)return;const h=a.getAttribute("href");
+  if(h.includes("t.me/"))goal("contact_telegram");else if(h.includes("mail.google.com")||h.startsWith("mailto:"))goal("contact_mail");});
+</script>
 </body>
 </html>
